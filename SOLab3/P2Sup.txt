@@ -1,0 +1,1 @@
+cat /etc/passwd | sort -k2 -n -t: | cut -d":" -f1,3,4 --output-delimiter=" -> "

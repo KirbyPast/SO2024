@@ -1,0 +1,1 @@
+ps -eo user,comm,pid --no-headers | tr -s " " |  cut -d" " -f1,2,3 --output-delimiter=: | sort -k2 -t:

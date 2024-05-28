@@ -1,0 +1,1 @@
+last | grep -m15 -v "reboot"| grep -v "wtmp" | tr -s " " | sort -k7 -t" " -n

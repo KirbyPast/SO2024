@@ -1,0 +1,9 @@
+1. (F) Fiul: Bună dimineața, tata!
+2. (F) Fiul: Sunt bine, mersi! Tu?
+3. (F) Fiul: Da, am terminat-o deja.
+4. (F) Fiul: Sigur, sună bine!
+5. (F) Fiul: Ok, hai să pregătim ceva bun!
+6. (F) Fiul: Ce părere ai despre ideea de a merge la film mai târziu?
+7. (F) Fiul: Vreau să te întreb ceva: pot să-mi iau bicicleta la plimbare?
+8. (F) Fiul: Știi, m-am gândit să citim o carte împreună mai târziu.
+
