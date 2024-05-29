@@ -45,30 +45,33 @@ int main(int argc, char* argv[]){
 
 	if(pid1==0){
 		//ZONA EXECUTATA DE PRIMUL FIU ( CEL CARE CA SELECTA DOAR CARACTERELE 0 ... F )
-//		if( -1 == (dup2(pipe_0to1[0],0))){
-//			perror("Eroare la redirectionarea input-ului!");
-//			exit(10);
-//		}
-		int fdW;
+		int fdW,fdR;
+		close(pipe_0to1[1]);
+		close(pipe_2to0[0]);
+		close(pipe_2to0[1]);
+
 		if(-1 == (fdW =  (open("pipe_1to2",O_WRONLY)))){
 			perror("Eroare la deschiderea comunicatiei!");
 			exit(10);
 		}
 
-//		while(read(pipe_0to1[0],&ch,sizeof(char))>0){
-//			if(ch>='a' && ch<='f'){
-//				ch-=32;
-//			}
-//			if((ch>='0' && ch<='9') || (ch>='A' && ch<='F')){
-//				write(fdW,&ch,sizeof(char));
-//			}
-//		}
+		if(-1 == (fdR = (open("pipe_1to2",O_RDONLY)))){
+			perror("Eroare la test1");
+			exit(11);
+		}
 
 
+		while(read(pipe_0to1[0],&ch,sizeof(char))>0){
+			if(ch>='a' && ch<='f'){
+				ch-=32;
+			}
+			if((ch>='0' && ch<='9') || (ch>='A' && ch<='F')){
+				write(fdW,&ch,sizeof(char));
+			}
+		}
+		close(fdR);
 		close(pipe_0to1[0]);
 		close(fdW);
-		printf("babaababa");
-		fflush(stdout);
 		exit(12);
 
 	}
@@ -83,7 +86,6 @@ int main(int argc, char* argv[]){
 			close(pipe_0to1[0]);
 			close(pipe_0to1[1]);
 			close(pipe_2to0[0]);
-
 			int fdR;
 			int fdDestinatie;
 			int vectorAparitii[50];
@@ -96,24 +98,82 @@ int main(int argc, char* argv[]){
 				perror("Eroare la deschiderea fisierului statistica!");
 				exit(15);
 			}
+			for(int i = 0; i<=16; i++){
+				vectorAparitii[i]=0;
+			}
 
-//			while(read(fdR,&ch,sizeof(char))>0){
-//				printf("%c",ch);
-//				fflush(stdout);
-//				if(ch>='0' && ch<='9'){
-//					vectorAparitii[(int)(ch-30)]++;
-//				}
-//				if(ch>='A' && ch<='F'){
-//					vectorAparitii[(int)(ch-55)]++;
-//				}
-//			}
-			printf("Am ajuns aici");
-			fflush(stdout);
+			while(read(fdR,&ch,sizeof(char))>0){
+				fflush(stdout);
+				if(ch>='0' && ch<='9'){
+					vectorAparitii[(int)(ch-48)]++;
+				}
+				if(ch>='A' && ch<='F'){
+					vectorAparitii[(int)(ch-55)]++;
+				}
+			}
+			char template[2]="0:";
+			int count = 0;
+			char buf;
+			char line = '\n';
 			for(int i = 0; i<=9;i++){
-				printf("%c:%d",(char)(i+48),vectorAparitii[i]);
+				template[0] = (char)(i+48);
+				write(fdDestinatie,&template,2*sizeof(char));
+
+				//Add to counter
+
+				if(vectorAparitii[i]) count++;
+
+				//Convert vectorAparitii to a string
+				int mirror= 0;
+				while(vectorAparitii[i]){
+					mirror = vectorAparitii[i]%10 + mirror*10;
+					vectorAparitii[i]/=10;
+				}
+				if(mirror == 0) { buf = '0'; write(fdDestinatie, &buf, sizeof(char)); }
+				while(mirror){
+					buf = (char)(mirror%10 + 48);
+					mirror/=10;
+					write(fdDestinatie,&buf,sizeof(char));
+				}
+
+				write(fdDestinatie,&line,sizeof(char));
 			}
 			for(int i = 10; i<=15; i++){
-				printf("%c:%d",(char)(i+55),vectorAparitii[i]);
+				template[0] = (char)(i + 55);
+
+				write(fdDestinatie,&template,2*sizeof(char));
+
+				if(vectorAparitii[i]) count++;
+
+				int mirror = 0;
+				while(vectorAparitii[i]){
+					mirror=vectorAparitii[i]%10 + mirror*10;
+					vectorAparitii[i]/=10;
+				}
+				if(mirror == 0) { buf = '0'; write(fdDestinatie, &buf, sizeof(char)); }
+				while(mirror){
+					buf = (char)(mirror % 10 + 48);
+					mirror/=10;
+					write(fdDestinatie,&buf,sizeof(char));
+				}
+
+				write(fdDestinatie, &line, sizeof(char));
+			}
+
+			if(count == 0 ){ buf = '0'; write(pipe_2to0[1],&buf, sizeof(char)); }
+			else {
+				int mirror = 0;
+				while(count){
+					mirror=count%10 + mirror*10;
+					count/=10;
+				}
+
+
+				while(mirror){
+					buf = (char)(mirror % 10 + 48);
+					mirror/=10;
+					write(pipe_2to0[1], &buf, sizeof(char));
+				}
 			}
 			close(fdR);
 			close(fdDestinatie);
@@ -122,22 +182,26 @@ int main(int argc, char* argv[]){
 		}
 		else{
 			//ZONA EXECUTATA DOAR DE TATA ( CEL CARE VA CITI FISIERUL SI CARE VA AFISA NR DE CARACTERE UNICE )
+			close(pipe_2to0[1]);
+			close(pipe_0to1[0]);
+
 			int fd;
+
 			if( -1 == (fd = open(argv[1],O_RDWR))){
 				perror("Eroare la deschiderea fisierului cu informatii!");
 				exit(7);
 			}
 
-//			if( -1 == (dup2(pipe_0to1[1],1))){
-//				perror("Eroare la redirectionarea output-ului!");
-//				exit(9);
-//			}
-
 			while(read(fd,&ch,sizeof(char))){
 				write(pipe_0to1[1],&ch,sizeof(char));
 			}
-
 			close(pipe_0to1[1]);
+			char buf;
+			printf("Numarul total de caractere hexadecimale unice este de: ");
+			while(read(pipe_2to0[0],&buf,sizeof(char))){
+				printf("%c",buf);
+			}
+			printf("\n");
 			close(pipe_2to0[0]);
 			close(pipe_2to0[1]);
 			close(fd);
