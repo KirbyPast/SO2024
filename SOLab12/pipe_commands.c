@@ -1,6 +1,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/types.h>
+
 int main(int argc, char* argv[]){
 	pid_t pid1, pid2, pid3;
 	int Pipe1to2[2], Pipe2to3[2], Pipe3to4[2];
