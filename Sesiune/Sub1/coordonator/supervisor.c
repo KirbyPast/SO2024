@@ -17,13 +17,17 @@ int parseazaFisier(char* filename, int fd){
         exit(4);
     }
 
-
     while(1){
         int line_length = 0;
         char buf[128] = {0};
-        printf("TesT");
 
-        while(read(fdFis, &buf[line_length], sizeof(char)) > 0){
+        int bytes_count = 0;
+        while((bytes_count = read(fdFis, &buf[line_length], sizeof(char)))){
+            if(bytes_count == -1 || bytes_count > 1){
+                perror("Eroare la citire!");
+                exit(3);
+            }
+
             if(buf[line_length] == '\n'){
                 buf[line_length] = '\0';
                 break;
@@ -31,6 +35,9 @@ int parseazaFisier(char* filename, int fd){
             line_length++;
         }
 
+        if(bytes_count == 0){
+            return 4;
+        }
         char* t1 = NULL, *t2 = NULL , *op = NULL;
         char* p = strtok(buf," ");
         while(p){
@@ -45,14 +52,17 @@ int parseazaFisier(char* filename, int fd){
             }
             p=strtok(NULL, " ");
         }
-        
+
         int T1, T2;
 
         T1 = atoi(t1);
         T2 = atoi(t2);
+        char ch = op[0];
 
         write(fd,&T1,sizeof(int));
-        write(fd,&op,sizeof(char));
+    
+        write(fd,&ch,sizeof(char));
+                           
         write(fd,&T2,sizeof(int));
 
     }
@@ -61,13 +71,16 @@ int parseazaFisier(char* filename, int fd){
 
 
 void primesteDate(int* shm_obj){
+    
     int sum = shm_obj[0] + shm_obj[1];
+    printf("%d + ",shm_obj[0]);
+    printf("%d = ",shm_obj[1]);
     printf("%d\n",sum);
     
 }
 
 int main(int argc, char* argv[]){
-    printf("merg");
+    sleep(2);
     if (argc != 2){
         printf("Usage: ./supervisor [path]");
         exit(1);
@@ -92,17 +105,19 @@ int main(int argc, char* argv[]){
     }
 
     char shm_name[]="/w2_to_sup";
-    sleep(3);
-    int fdRM = open(shm_name, O_RDONLY | O_CREAT, 0600);
 
+    int fdRM = shm_open(shm_name, O_RDWR | O_CREAT, 0777);
+  
     if( fdRM == -1 ){
-        perror("Eroare la deschiderea maparii-ului!");
+        perror("Eroare la deschiderea maparii-ului!\n");
         exit(4);
     }
 
+    ftruncate(fdRM ,8);
+
     int* shm_obj;
 
-    shm_obj = mmap(NULL, 8, PROT_READ, MAP_SHARED, fdRM, 0);
+    shm_obj = mmap(NULL, 8, PROT_WRITE | PROT_READ, MAP_SHARED, fdRM, 0);
 
     if(shm_obj == MAP_FAILED){
         perror("Eroare la crearea unei mape!");
@@ -110,7 +125,9 @@ int main(int argc, char* argv[]){
     }
 
     parseazaFisier(argv[1],fdWF);
-
+    close(fdWF);
+    //Pt a-i lasa timp lui worker2 sa scrie
+    sleep(1);
     primesteDate(shm_obj);
 
     close(fdRM);
