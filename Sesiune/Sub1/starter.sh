@@ -6,6 +6,8 @@ then
     exit 1
 fi
 
+
+
 fis=$(realpath $1)
 
 ./subordinates/worker1 &

@@ -54,6 +54,7 @@ int parseazaFisier(char* filename, int fd){
 
         T1 = atoi(t1);
         T2 = atoi(t2);
+
         //Scriem datele in fifo
         if(-1 == write(fd,&T1,sizeof(int))){
             perror("Eroare la write!");
@@ -75,7 +76,6 @@ void citesteRezultate(int* shm_obj){
 
 
 int main(int argc, char* argv[]){
-
     if(argc != 2){
         printf("Usage: ./supervisor [path]");
         exit(1);
@@ -121,4 +121,5 @@ int main(int argc, char* argv[]){
     sleep(1);
     citesteRezultate(shm_obj);
     munmap(shm_obj,2*sizeof(int));
+    return 0;
 }

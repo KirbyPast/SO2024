@@ -10,6 +10,7 @@
 int n = 1;
 int i = 0;
 int ok = 0;
+int quitok = 0;
 
 void handle_chld(int nr_sem){
     printf("Am primit SIGCHLD!\n");
@@ -20,12 +21,15 @@ void handle_usr2(int nr_sem){
 }
 
 void handle_alarm(int nr_sem){
-    printf("Au trecut %d secunde...\n",n);
     i++;
-    if(!ok && i == 5){
+    if(!quitok && i == 5){
         printf("Am iesit din cauza inactivitatii!\n");
         exit(2);
     }
+    else if(!ok){
+        printf("Au trecut %d secunde...\n",n);
+    }
+    ok = 0;
     alarm(n);
 }
 //Seconds count
@@ -46,6 +50,7 @@ int main(int argc, char* argv[]){
     alarm(n);
     while(read(0,&ch,sizeof(char))>0){
             ok = 1;
+            quitok = 1;
             write(fd,&ch,sizeof(char));
     }
 
